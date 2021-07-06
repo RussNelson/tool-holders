@@ -1,6 +1,6 @@
 //bin/sh -c 'grep if.\(workon tool-mount.scad | cut -d\" -f2 | xargs -I X openscad -D workon=\"X\" -o X.stl tool-mount.scad'; exit
 
-workon = "20mm_chisel";
+workon = "5mm_screwdriver";
 xsize = 57;
 ysize = 18;
 radius = 5;
@@ -15,24 +15,30 @@ module base(thickness) {
         }
 }
 
-// generic screwdriver. Add more easement for larger diameters.
-module screwdriver(thickness, diameter, easement=6) {
+// generic screwdriver.
+module screwdriver(thickness, diameter) {
     difference() {
         base(thickness);
         translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter, h=xsize + 0.02, $fn=20); 
         translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+.5, h=5 + 0.02, $fn=20); 
         translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+1, h=4 + 0.02, $fn=20); 
         translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+1.5, h=3 + 0.02, $fn=20); 
-        if (easement >= 6) {
-            translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+2, h=2 + 0.02, $fn=20); 
-            translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+2.5, h=1 + 0.02, $fn=20); 
-        }
+        translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+2, h=2 + 0.02, $fn=20); 
+        translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+2.5, h=1 + 0.02, $fn=20); 
     }
 }
 
 
 if (workon == "5mm_screwdriver") {
-    screwdriver( thickness = 7, diameter = 5, easement=4);
+    screwdriver( thickness = 9, diameter = 5);
+}
+
+if (workon == "6mm_screwdriver") {
+    screwdriver( thickness = 10, diameter = 6);
+}
+
+if (workon == "7mm_screwdriver") {
+    screwdriver( thickness = 11, diameter = 7);
 }
 
 if (workon == "8mm_screwdriver") {
@@ -75,19 +81,27 @@ module wrench(post_d, post_h, ttt, thickness = 5, angle=0, tsize=8) {
     slop_width = 2;
     slop_height = 2;
     base(thickness);
-    post_h =  post_h / cos(angle);
-    translate([15,ysize/2,thickness]) rotate([0,0,90]) linear_extrude(height=1) text(ttt, tsize, "Arial", halign="center");
-    translate([xsize / 2, ysize / 2, 0]) rotate([0,-angle,0]) union() {
-        translate([0, 0, thickness]) cylinder(d=post_d - slop_width, h=post_h);
-        // make the post tend to hold the tool
-        translate([0, 0, thickness + post_h]) cylinder(d1=post_d -slop_width/2, d2=post_d, h=post_h/2);
-        translate([0, 0, thickness + post_h * 1.5]) cylinder(d2=post_d -slop_width*2, d1=post_d, h=post_h/2);
-    }
-    // make a filet around the base of the post
-    translate([xsize / 2 - 2, ysize / 2, 0]) scale([1 / cos(angle), 1, 1]) union() {
-        translate([0, 0,, thickness]) cylinder(d1 = post_d, d2=post_d - slop_width, h=slop_height);
-        translate([0, 0,, thickness]) cylinder(d1 = post_d + slop_width, d2=post_d-slop_width/2, h=slop_height/2);
-        translate([0, 0,, thickness + slop_height * 3/4]) cylinder(d1 = post_d - slop_width*3/4, d2=post_d-slop_width, h=slop_height/2);
+    difference() {
+        union() {
+            post_h =  post_h / cos(angle);
+            translate([15,ysize/2,thickness]) rotate([0,0,90]) linear_extrude(height=1) text(ttt, tsize, "Arial", halign="center");
+            translate([xsize / 2 + post_d/3, ysize / 2, 0]) rotate([0,-angle,0]) union() {
+                translate([0, 0, thickness]) cylinder(d=post_d - slop_width, h=post_h);
+                // make the post tend to hold the tool
+                translate([0, 0, thickness + post_h]) cylinder(d1=post_d -slop_width/2, d2=post_d, h=post_h/2);
+                translate([0, 0, thickness + post_h * 1.5]) cylinder(d2=post_d -slop_width*2, d1=post_d, h=post_h/2);
+            }
+            // make a filet around the base of the post
+            translate([xsize / 2 - 2 + post_d/3, ysize / 2, 0]) scale([1 / cos(angle), 1, 1]) union() {
+                translate([0, 0,, thickness]) cylinder(d1 = post_d, d2=post_d - slop_width, h=slop_height);
+                translate([0, 0,, thickness]) cylinder(d1 = post_d + slop_width, d2=post_d-slop_width/2, h=slop_height/2);
+                translate([0, 0,, thickness + slop_height * 3/4]) cylinder(d1 = post_d - slop_width*3/4, d2=post_d-slop_width, h=slop_height/2);
+            }
+        }
+        translate([0,ysize + 0.01,0]) base(thickness);
+        translate([0,-ysize - 0.01,0]) base(thickness);
+        translate([0,ysize + 0.01,thickness-0.01]) rotate([-9,0,0]) base(thickness*1.5);
+        translate([0,-ysize - 0.01,thickness-0.01-3]) rotate([9,0,0]) base(thickness*1.5);
     }
 }
 
@@ -121,13 +135,41 @@ if (workon == "wrench_15_11_32") {
     wrench(post_d, post_h, "11/32", angle=15, tsize=5);
 }
 
-
 if (workon == "wrench_15_3_8") {
     post_d = 9.8; // for a combination 3/8" wrench with a 15 degree tilt.
     post_h = 7.24;
     wrench(post_d, post_h, "3/8", angle=15);
 }
 
+if (workon == "wrench_15_7_8") {
+    thickness = 5;
+    post_d = 23.2; // for a combination 3/8" wrench with a 15 degree tilt.
+    post_h = 12.0;
+    wrench(post_d, post_h, "7/8", thickness, angle=15);
+}
+
+if (workon == "wrench_15_3_4") {
+    thickness = 5;
+    post_d = 20.2; // for a combination 3/4" wrench with a 15 degree tilt.
+    post_h = 11.3;
+    wrench(post_d, post_h, "3/4", thickness, angle=15);
+}
+
+
+if (workon == "wrench_15_11_16") {
+    thickness = 5;
+    post_d = 17.5; // for a combination 11/16" wrench with a 15 degree tilt.
+    post_h = 10.75;
+    wrench(post_d, post_h, "11/16", thickness, angle=15, tsize=5);
+}
+
+
+if (workon == "wrench_15_13_16") {
+    thickness = 5;
+    post_d = 20.0; // for a combination 13/16" wrench with a 15 degree tilt.
+    post_h = 12.3;
+    wrench(post_d, post_h, "13/16", thickness, angle=15, tsize=5);
+}
 
 // needs two bases.
 if (workon == "small_clippers") {
