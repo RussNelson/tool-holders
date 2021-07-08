@@ -1,6 +1,6 @@
 //bin/sh -c 'grep if.\(workon tool-mount.scad | cut -d\" -f2 | xargs -I X openscad -D workon=\"X\" -o X.stl tool-mount.scad'; exit
 
-workon = "5mm_screwdriver";
+workon = "large_needlenose_pliers";
 xsize = 57;
 ysize = 18;
 radius = 5;
@@ -211,6 +211,43 @@ if (workon == "needlenose_pliers") {
 
 
 // needs two bases.
+if (workon == "large_needlenose_pliers") {
+    thickness = 16;
+    ytotal = 55;
+    spacing = ytotal - ysize - ysize;
+    xsize2 = 55;
+    ysize2 = 45;
+    depth = 12;
+    tip_diameter = 6.2;
+    difference() {
+        union() {
+            base(thickness);
+            translate([0, spacing + ysize, 0]) base(thickness);
+            translate([radius, ysize, 0]) cube([xsize - radius*2, spacing, thickness]);
+        }
+        // cut the hole
+        translate([-0.01, (ytotal - ysize2)/2, (thickness - depth)/2]) {
+            *cube([xsize2 + 0.02, ysize2, depth]);
+            polyhedron([
+                [0, 0, 0], [0, ysize2, 0], // 0=lower right front, 1=lower left front
+                [0, 0, depth], [0, ysize2, depth], // 2=upper right front, 3=upper left front
+                [xsize2 + 0.02, ysize2/2 + spacing/2, depth], [xsize2 + 0.02, ysize2/2 - spacing/2, depth], // 4=upper left back 5=upper right back
+                [xsize2 + 0.02, ysize2/2 + spacing/2, 0], [xsize2 + 0.02, ysize2/2 - spacing/2, 0], // 6=lower left back, 7=lower right back
+            ],[
+                [0,7,6,1], // bottom
+                [0,2,5,7], // right
+                [1,6,4,3], // left
+                [0,2,3,1], // front
+                [4,6,7,5], // back
+                [2,3,4,5], // top
+            ], 2);
+        }
+        *translate([-0.02, ysize, (thickness - depth)/2]) cube([xsize + 0.02, spacing+0.02, depth]);
+    }
+}
+
+
+// needs two bases.
 if (workon == "20mm_chisel") {
     thickness = 10;
     zsize = 6;
@@ -240,3 +277,21 @@ if (workon == "20mm_chisel") {
     }
 }
  
+// needs two bases.
+// the bottom could be a wedge to reflect the wedge shape of the level
+if (workon == "mini_level") {
+    thickness = 22;
+    ytotal = 48;
+    spacing = ytotal - ysize - ysize;
+    xsize2 = 5; // thickness of the wall
+    ysize2 = 41; // as measured, 40.5
+    depth = 17; // as measured, 16.11
+    difference() {
+        union() {
+            base(thickness);
+            translate([0, spacing + ysize, 0]) base(thickness);
+            translate([radius, ysize, 0]) cube([xsize - radius*2, spacing, thickness]);
+        }
+        translate([-0.01, (ytotal - ysize2)/2, (thickness - depth)/2]) cube([xsize - xsize2 + 0.02, ysize2, depth]);
+    }
+}
