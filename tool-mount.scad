@@ -210,6 +210,7 @@ if (workon == "needlenose_pliers") {
 }
 
 
+
 // needs two bases.
 if (workon == "large_needlenose_pliers") {
     thickness = 16;
@@ -226,8 +227,7 @@ if (workon == "large_needlenose_pliers") {
             translate([radius, ysize, 0]) cube([xsize - radius*2, spacing, thickness]);
         }
         // cut the hole
-        translate([-0.01, (ytotal - ysize2)/2, (thickness - depth)/2]) {
-            *cube([xsize2 + 0.02, ysize2, depth]);
+        translate([-0.02, (ytotal - ysize2)/2, (thickness - depth)/2]) {
             polyhedron([
                 [0, 0, 0], [0, ysize2, 0], // 0=lower right front, 1=lower left front
                 [0, 0, depth], [0, ysize2, depth], // 2=upper right front, 3=upper left front
@@ -237,12 +237,11 @@ if (workon == "large_needlenose_pliers") {
                 [0,7,6,1], // bottom
                 [0,2,5,7], // right
                 [1,6,4,3], // left
-                [0,2,3,1], // front
+                [0,1,3,2], // front
                 [4,6,7,5], // back
                 [2,3,4,5], // top
             ], 2);
         }
-        *translate([-0.02, ysize, (thickness - depth)/2]) cube([xsize + 0.02, spacing+0.02, depth]);
     }
 }
 
