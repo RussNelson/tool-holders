@@ -1,6 +1,6 @@
 //bin/sh -c 'grep if.\(workon tool-mount.scad | cut -d\" -f2 | xargs -I X openscad -D workon=\"X\" -o X.stl tool-mount.scad'; exit
 
-workon = "large_needlenose_pliers";
+workon = "6mm_screwdriver";
 xsize = 57;
 ysize = 18;
 radius = 5;
@@ -292,5 +292,43 @@ if (workon == "mini_level") {
             translate([radius, ysize, 0]) cube([xsize - radius*2, spacing, thickness]);
         }
         translate([-0.01, (ytotal - ysize2)/2, (thickness - depth)/2]) cube([xsize - xsize2 + 0.02, ysize2, depth]);
+    }
+}
+
+// needs two bases.
+if (workon == "socket_wrench_3_8") {
+    head_diam = 37; // was 35.5
+    front_depth = 3;
+    front_diam = 27.7; // was 27.0
+    back_diam = 27.7;
+    back_depth = 3.8; // was 3.5
+    handle_diam = 15;
+    depth = 16.0;
+    thickness = depth + 6 + 3; // 14.8 as measured
+
+    ytotal = 45;
+    spacing = ytotal - ysize - ysize;
+    difference() {
+        union() {
+                base(thickness);
+                translate([0, spacing + ysize, 0]) base(thickness);
+                translate([radius, ysize, 0]) cube([xsize - radius*2, spacing, thickness]);
+        }
+        // cut a hole for the main head.
+        translate([xsize, ytotal/2, thickness - depth - front_depth]) cylinder(d = head_diam + 0.02, h=depth + 0.01);
+        // cut several holes for the handle filet.
+        translate([xsize-head_diam*1/4, ytotal/2, thickness - depth - front_depth]) cylinder(d = head_diam*3/4 + 0.02, h=depth + 0.01);
+        translate([xsize-head_diam*2/5, ytotal/2, thickness - depth - front_depth]) cylinder(d = head_diam/2 + 0.02, h=depth + 0.01);
+        translate([xsize-head_diam*3/6, ytotal/2, thickness - depth - front_depth]) cylinder(d = head_diam*2/5 + 0.02, h=depth + 0.01);
+        translate([xsize-head_diam*4/7, ytotal/2, thickness - depth - front_depth]) cylinder(d = head_diam*2/6 + 0.02, h=depth + 0.01);
+        translate([xsize-head_diam*5/8, ytotal/2, thickness - depth - front_depth]) cylinder(d = head_diam*2/7 + 0.02, h=depth + 0.01);
+        translate([xsize-head_diam*7/10, ytotal/2, thickness - depth - front_depth]) cylinder(d = head_diam*2/8 + 0.02, h=depth + 0.01);
+        // cut a hole for the front
+        translate([xsize, ytotal/2, thickness - front_depth]) cylinder(d = front_diam + 0.02, h=front_depth + 0.01);
+        // cut a hole behind the head for the direction changer.
+        translate([xsize, ytotal/2, thickness - depth - back_depth - front_depth + 0.01]) cylinder(d = back_diam + 0.02, h=back_depth + 0.01);
+        // cut a channel for the handle.
+        translate([0, ytotal/2, thickness - handle_diam/2 - front_depth]) rotate([0,90,0]) cylinder(d = handle_diam + 0.02, h=xsize);
+        translate([0, ytotal/2 - handle_diam/2, thickness - handle_diam/2 - front_depth]) cube([xsize, handle_diam, handle_diam/2 + front_depth + 0.01]);
     }
 }
