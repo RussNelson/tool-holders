@@ -1,6 +1,6 @@
 //bin/sh -c 'grep if.\(workon tool-mount.scad | cut -d\" -f2 | xargs -I X openscad -D workon=\"X\" -o X.stl tool-mount.scad'; exit
 
-workon = "27mm_chisel";
+workon = "wrench_15_15_16";
 xsize = 57;
 ysize = 18;
 radius = 5;
@@ -30,7 +30,6 @@ module screwdriver(thickness, diameter) {
         translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+2.5, h=1 + 0.02, $fn=20); 
     }
 }
-
 
 if (workon == "5mm_screwdriver") {
     screwdriver( thickness = 9, diameter = 5);
@@ -103,8 +102,8 @@ module wrench(post_d, post_h, ttt, thickness = 5, angle=0, tsize=8) {
         }
         translate([0,ysize + 0.01,0]) base(thickness);
         translate([0,-ysize - 0.01,0]) base(thickness);
-        translate([0,ysize + 0.01,thickness-0.01]) rotate([-9,0,0]) base(thickness*1.5);
-        translate([0,-ysize - 0.01,thickness-0.01-3]) rotate([9,0,0]) base(thickness*1.5);
+        translate([0,ysize + 0.01,thickness-0.01]) rotate([-9,0,0]) base(post_h);
+        translate([0,-ysize - 0.01,thickness-0.01-3]) rotate([9,0,0]) base(post_h);
     }
 }
 
@@ -138,6 +137,18 @@ if (workon == "wrench_15_11_32") {
     wrench(post_d, post_h, "11/32", angle=15, tsize=5);
 }
 
+if (workon == "wrench_15_15_16") {
+    post_d = 23.9; // for a combination 15/16" wrench with a 15 degree tilt.
+    post_h = 14.0;
+    wrench(post_d, post_h, "15/16", angle=15, tsize=5);
+}
+
+if (workon == "wrench_15_1") {
+    post_d = 26.32; // for a combination 1" wrench with a 15 degree tilt.
+    post_h = 14.0;
+    wrench(post_d, post_h, "1", angle=15);
+}
+
 if (workon == "wrench_15_3_8") {
     post_d = 9.8; // for a combination 3/8" wrench with a 15 degree tilt.
     post_h = 7.24;
@@ -146,7 +157,7 @@ if (workon == "wrench_15_3_8") {
 
 if (workon == "wrench_15_7_8") {
     thickness = 5;
-    post_d = 23.2; // for a combination 3/8" wrench with a 15 degree tilt.
+    post_d = 23.2; // for a combination 7/8" wrench with a 15 degree tilt.
     post_h = 12.0;
     wrench(post_d, post_h, "7/8", thickness, angle=15);
 }
