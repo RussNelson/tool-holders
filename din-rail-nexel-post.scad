@@ -1,5 +1,8 @@
 // one inch ID tube
 
+include <../roundedcube.scad>
+
+
 id = 25.2;
 thick = 3;
 rimz = 0.9;
@@ -15,7 +18,7 @@ m5nuth = 3.76 + .2;
 difference() {
     union() {
         cylinder(d=id + 3, h=height);
-        translate([-(din_hole*1.8 )/2, cutx, 0]) cube([din_hole*1.8, (id + thick)/2 + thick, dinz]);
+        translate([-(din_hole*1.8 )/2, cutx, 0]) roundedcube([din_hole*1.8, (id + thick)/2 + thick, dinz], radius=1);
     }
     // cut away the inside of the tube, and leave a little rim to go in the slot.
     translate([0,0,rimz -0.01]) cylinder(d=id + rimx, h=height + 0.02);

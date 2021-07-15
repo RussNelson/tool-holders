@@ -1,6 +1,6 @@
 //bin/sh -c 'grep if.\(workon tool-mount.scad | cut -d\" -f2 | xargs -I X openscad -D workon=\"X\" -o X.stl tool-mount.scad'; exit
 
-workon = "wrench_15_15_16";
+workon = "mini_vise_grip";
 xsize = 57;
 ysize = 18;
 radius = 5;
@@ -474,4 +474,28 @@ if (workon == "endstop") {
         translate([xsize - nutx/4, nutbase, zsize/2]) rotate([-90,0,0]) cylinder(h=nuty, d=nutz, $fn=6);
         translate([xsize - 0, nutbase, zsize/2]) rotate([-90,0,0]) cylinder(h=nuty, d=nutz, $fn=6);
     }
+}
+
+module peg(peg_d) {
+    peg_h = 8;
+    translate([0,0,0]) cylinder(d1=peg_d, d2=peg_d-2, h=peg_h);
+    translate([0,0,peg_h]) cylinder(d2=peg_d, d1 = peg_d-2, h=peg_h);
+    // create a filet
+    translate([0,0,0]) cylinder(d1=peg_d+2, d2=peg_d - .6, h=2);
+    translate([0,0,0]) cylinder(d1=peg_d+4, d2=peg_d+2 - 1.2, h=1);
+}
+
+// needs three bases.
+if (workon == "mini_vise_grip") {
+    thickness = 5;
+    ywrench = 41;
+    peg_d = 10;
+    ytotal = ywrench + peg_d*2 + ysize/2;
+    spacing = ytotal - ysize - ysize;
+    base(thickness);
+    translate([0, spacing + ysize, 0]) base(thickness);
+    translate([0, (ytotal/2 - ysize/2), 0]) base(thickness); // middle
+    translate([radius, ysize, 0]) cube([xsize - radius*2, spacing, thickness]);
+    translate([20,ytotal/2 - ywrench/2 - peg_d/2,thickness]) peg(peg_d);
+    translate([20,ytotal/2 + ywrench/2 + peg_d/2,thickness]) peg(peg_d);
 }
