@@ -5,7 +5,7 @@ around for 80 years, and is mostly used to mount circuit breakers and other
 electronics. It's nice because it's relatively inexpensive, easy to mount, and
 comes in some very long lengths.
 
-![Examples of holders](/images/example-holders.jpg)
+![Examples of holders](/images/20210715_090836.jpg)
 
 I have been adding to the Thingiverse collection
 (https://www.thingiverse.com/thing:4888847/) as I go along, and intend to
