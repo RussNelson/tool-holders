@@ -1,6 +1,6 @@
 //bin/sh -c 'grep if.\(workon tool-mount.scad | cut -d\" -f2 | xargs -I X openscad -D workon=\"X\" -o X.stl tool-mount.scad'; exit
 
-workon = "mini_vise_grip";
+workon = "din_rail_adapter";
 xsize = 57;
 ysize = 18;
 radius = 5;
@@ -8,7 +8,6 @@ radius = 5;
 include <../roundedcube.scad>
 
 
-// make a base which matches Din_Rail_Adapter.
 module base(thickness) {
         hull() {
             translate([radius, radius, 0]) cylinder(r=radius, h=thickness);
@@ -259,19 +258,22 @@ if (workon == "large_needlenose_pliers") {
     }
 }
 
-
 // needs two bases.
-if (workon == "20mm_chisel") {
-    thickness = 10;
-    zsize = 6;
-    ywidth = 20;
+// add 2mm to the measured width of the chisel for ywidth
+// you don't need to add any extra to the thickness of the chisel for zsize.
+module chisel(thickness, ywidth, zsize, name) {
+    sidewall = 5;
+    ytotal = ywidth + sidewall*2;
+    spacing = ytotal - ysize - ysize;
+    if (spacing < 0) {spacing = 0;}
     difference() {
         hull() {
             base(thickness);
-            translate([0, ysize, 0]) base(thickness);
+            translate([0, spacing + ysize, 0]) base(thickness);
+            translate([radius, 0, 0]) cube([xsize - radius*2, ytotal, thickness]);
         }
-        translate([0 - 0.01,(ysize*2 -ywidth)/2,(thickness - zsize) /2]) cube([xsize - 5, ywidth, zsize]);
-        translate([0 - 0.01,(ysize*2 -ywidth)/2,(thickness - zsize) /2])  {
+        translate([0 - 0.01,sidewall,(thickness - zsize) /2]) cube([xsize - 5, ywidth, zsize]);
+        translate([0 - 0.01,sidewall,(thickness - zsize) /2])  {
             xsize = 5;
             polyhedron([
                 [0, -ywidth*.10, -zsize*.2], [0, ywidth*1.1, -zsize*.2],
@@ -288,37 +290,19 @@ if (workon == "20mm_chisel") {
             ], 2);
         }
     }
+    translate([15,ytotal/2,thickness]) rotate([0,0,90]) linear_extrude(height=1) text(name, 8, "Arial", halign="center");
+}
+
+if (workon == "20mm_chisel") {
+    chisel(10, 20, 6, "20mm");
 }
  
-
-// needs two bases.
 if (workon == "27mm_chisel") {
-    thickness = 10;
-    zsize = 6;
-    ywidth = 27;
-    difference() {
-        hull() {
-            base(thickness);
-            translate([0, ysize, 0]) base(thickness);
-        }
-        translate([0 - 0.01,(ysize*2 -ywidth)/2,(thickness - zsize) /2]) cube([xsize - 5, ywidth, zsize]);
-        translate([0 - 0.01,(ysize*2 -ywidth)/2,(thickness - zsize) /2])  {
-            xsize = 5;
-            polyhedron([
-                [0, -ywidth*.10, -zsize*.2], [0, ywidth*1.1, -zsize*.2],
-                [0, -ywidth*.10, zsize*1.2], [0, ywidth*1.1, zsize*1.2],
-                [xsize, 0, zsize], [xsize, ywidth, zsize],
-                [xsize, 0, 0], [xsize, ywidth, 0],
-            ],[
-                [0,1,7,6],
-                [0,6,4,2],
-                [1,3,5,7],
-                [0,2,3,1],
-                [4,6,7,5],
-                [2,4,5,3],
-            ], 2);
-        }
-    }
+    chisel(10, 27, 6, "27mm");
+}
+ 
+if (workon == "40mm_chisel") {
+    chisel(14, 40, 7.5, "40mm");
 }
  
 // needs two bases.
@@ -418,6 +402,8 @@ if (workon == "fluke_115") {
     }
 }
 
+din_zthick = 1.5; // was 1.25, was 1.05. steel is 1.02, aluminum is 1.05
+
 // no bases, goes on the end by itself
 if (workon == "endstop") {
     // inspired by https://thingiverse.com/thing:4757574747474747474747474
@@ -429,7 +415,6 @@ if (workon == "endstop") {
     din_xsize = 35 + .1; // apparently 35 is nominal. Steel is -.1, aluminum is -.4
     din_xwidth = 27.5; // was 27.1 which was definitely wrong. steel is 26.9 aluminum is 27.1
     din_zsize = 5.5; // gap between wall and bottom of lip: steel is 5.5, aluminum is 7.2
-    din_zthick = 1.5; // was 1.25, was 1.05. steel is 1.02, aluminum is 1.05
     screw_head = 6;
     screw = 3;
     nuty = 2.7;
@@ -478,24 +463,128 @@ if (workon == "endstop") {
 
 module peg(peg_d) {
     peg_h = 8;
-    translate([0,0,0]) cylinder(d1=peg_d, d2=peg_d-2, h=peg_h);
+    // from top to bottom.
+    translate([0,0,peg_h + peg_h]) cylinder(d1=peg_d, d2 = peg_d-2, h=2);
     translate([0,0,peg_h]) cylinder(d2=peg_d, d1 = peg_d-2, h=peg_h);
+    translate([0,0,0]) cylinder(d1=peg_d, d2=peg_d-2, h=peg_h);
     // create a filet
     translate([0,0,0]) cylinder(d1=peg_d+2, d2=peg_d - .6, h=2);
     translate([0,0,0]) cylinder(d1=peg_d+4, d2=peg_d+2 - 1.2, h=1);
 }
 
 // needs three bases.
-if (workon == "mini_vise_grip") {
+module vice_grip(model, name) {
     thickness = 5;
-    ywrench = 41;
+    ywrench = model;
     peg_d = 10;
     ytotal = ywrench + peg_d*2 + ysize/2;
     spacing = ytotal - ysize - ysize;
     base(thickness);
     translate([0, spacing + ysize, 0]) base(thickness);
     translate([0, (ytotal/2 - ysize/2), 0]) base(thickness); // middle
-    translate([radius, ysize, 0]) cube([xsize - radius*2, spacing, thickness]);
+    translate([radius, 0, 0]) cube([xsize - radius*2, ytotal, thickness]);
     translate([20,ytotal/2 - ywrench/2 - peg_d/2,thickness]) peg(peg_d);
     translate([20,ytotal/2 + ywrench/2 + peg_d/2,thickness]) peg(peg_d);
+    translate([20 + peg_d*3/4,ysize/2,thickness]) linear_extrude(height=1) text(name, 8, "Arial", valign="center");
 }
+
+// This is for the genuine Irwin Vice-Grip(tm) 6LN (long nose)
+if (workon == "vise_grip_6LN") {
+    vice_grip(32.5, "6LN");
+}
+
+// This is for the genuine Irwin Vice-Grip(tm) 7R (small)
+if (workon == "vise_grip_7R") {
+    vice_grip(41, "7R");
+}
+
+// This is for the genuine Irwin Vice-Grip(tm) (standard)
+if (workon == "vise_grip_10CR") {
+    vice_grip(48, "10CR");
+}
+
+spring_outer_d = 3.87;
+spring_x = 2.8;
+spring_y = 8.25;
+arm_y = spring_y - spring_outer_d;
+
+module spring_turn(catch_z) {
+    spring_inner_d = spring_outer_d - spring_x;
+    difference() {
+        cylinder(d=spring_outer_d, h=catch_z);
+        translate([0,0,-0.01]) cylinder(d=spring_inner_d, h=catch_z+0.02);
+        translate([-spring_outer_d/2,-spring_outer_d,-0.01]) cube([spring_outer_d, spring_outer_d, catch_z+0.02]);
+    }
+    translate([spring_inner_d/2,-arm_y,0]) cube([spring_x/2, arm_y, catch_z]);
+}
+
+
+// reinvented from DIN_Rail_Adapter
+if (workon == "din_rail_adapter") {
+    latching = true;
+    thickness = 4.6;
+    thickness_catch = 8.0;
+    opening_y = 10;
+    opening_x = 41.5;
+    opening_x_off = 5.5;
+    latch_z = 2;
+    latch_x = 5;
+    // the top catch.
+    difference() {
+        translate([0, 0, 0.01]) base(thickness_catch - 0.01);
+        translate([-0.01, -0.01, 0]) cube([opening_x_off + opening_x + 0.01, ysize+0.01, thickness + din_zthick  + 0.01]);
+        translate([-0.01, -0.01, 0]) cube([opening_x_off + opening_x - 1 + 0.01, ysize+0.01, thickness_catch + 0.01]);
+    }
+
+    retainer_hole_x = 15.4;
+    retainer_x = 9.75;
+    
+    // cut an opening in the base for the catch and retainer
+    difference() {
+        base(thickness);
+        translate([opening_x_off, (ysize - opening_y)/2, -0.01]) roundedcube([opening_x, opening_y, thickness + 0.02], radius=2, apply_to="z");
+        if (latching) {
+            translate([0-0.01, (ysize - opening_y)/2, -0.01]) cube([opening_x_off + 2, opening_y, latch_z+ 0.02]);
+        }
+    }
+
+    catch_x = 20;
+    catch_x_off = 3;
+    catch_y = 8;
+    catch_z = 4;
+    springend_d = 4.75;
+    din_catch_x = 5;
+
+    // catch
+    translate([catch_x_off + opening_x_off, (opening_y - catch_y)/2 + (ysize - opening_y)/2, 0]) {
+        roundedcube([catch_x, catch_y, catch_z], radius=1, apply_to="z");
+        difference() {
+            roundedcube([din_catch_x, catch_y, thickness_catch], radius=1, apply_to="z");
+            translate([din_catch_x - 1,-0.01, thickness]) cube([1 + 0.01, catch_y + 0.02, din_zthick]);
+            translate([din_catch_x,-0.01, thickness + din_zthick + 0.3]) rotate([0,-45,0]) cube([2 + 0.01, catch_y + 0.02, 10]);
+        }
+    }
+    if (latching) {
+        difference() {
+            translate([-latch_x, (opening_y - catch_y)/2 + (ysize - opening_y)/2, 0]) cube([catch_x_off + opening_x_off + latch_x + 1, catch_y, latch_z-0.5]);
+            translate([-latch_x + 2, (ysize/2 - 2.5), -0.01]) cube([2, 5, 5]);
+        }
+        // add anti-removal bars
+        translate([catch_x_off + opening_x_off, 0, thickness]) cube([din_catch_x -1.7, (ysize - opening_y)/2, thickness_catch - thickness]);
+        translate([catch_x_off + opening_x_off, ysize - (ysize - opening_y)/2, thickness]) cube([din_catch_x -1.7, (ysize - opening_y)/2, thickness_catch - thickness]);
+    }
+
+    // bottom and top spring end
+    translate([catch_x_off + opening_x_off + catch_x, ysize/2, 0]) cylinder(d=springend_d, h=catch_z);
+    translate([opening_x_off + opening_x, ysize/2, 0]) cylinder(d=springend_d, h=catch_z);
+    translate([.4, .5, 0]) {
+        translate([catch_x_off + opening_x_off + catch_x + springend_d/2, ysize/2 + 3.2/2, 0]) spring_turn(catch_z);
+        translate([catch_x_off + opening_x_off + catch_x + springend_d/2, ysize/2 + 3.2/2, 0]) mirror([1,0,0]) spring_turn(catch_z);
+        translate([catch_x_off + opening_x_off + catch_x + springend_d/2 + (spring_outer_d - spring_x/2)*1, ysize/2 + 3.2/2 - arm_y, 0]) mirror([0,1,0]) spring_turn(catch_z);
+        translate([catch_x_off + opening_x_off + catch_x + springend_d/2 + (spring_outer_d - spring_x/2)*2, ysize/2 + 3.2/2, 0]) spring_turn(catch_z);
+        translate([catch_x_off + opening_x_off + catch_x + springend_d/2 + (spring_outer_d - spring_x/2)*3, ysize/2 + 3.2/2 - arm_y, 0]) mirror([0,1,0]) spring_turn(catch_z);
+        translate([catch_x_off + opening_x_off + catch_x + springend_d/2 + (spring_outer_d - spring_x/2)*4, ysize/2 + 3.2/2, 0]) spring_turn(catch_z);
+        translate([catch_x_off + opening_x_off + catch_x + springend_d/2 + (spring_outer_d - spring_x/2)*5, ysize/2 + 3.2/2 - arm_y, 0]) mirror([0,1,0]) spring_turn(catch_z);
+    }
+}
+
