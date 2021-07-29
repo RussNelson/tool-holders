@@ -1,6 +1,6 @@
 //bin/sh -c 'grep if.\(workon tool-mount.scad | cut -d\" -f2 | xargs -I X openscad -D workon=\"X\" -o X.stl tool-mount.scad'; exit
 
-workon = "din_rail_adapter";
+workon = "12mm_screwdriver";
 xsize = 57;
 ysize = 18;
 radius = 5;
@@ -18,7 +18,7 @@ module base(thickness) {
 }
 
 // generic screwdriver.
-module screwdriver(thickness, diameter) {
+module screwdriver(thickness, diameter, ttt="") {
     difference() {
         base(thickness);
         translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter, h=xsize + 0.02, $fn=20); 
@@ -28,38 +28,39 @@ module screwdriver(thickness, diameter) {
         translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+2, h=2 + 0.02, $fn=20); 
         translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+2.5, h=1 + 0.02, $fn=20); 
     }
+    translate([25,ysize/2 - 10/2,thickness]) linear_extrude(height=1) text(ttt, 10, "Arial", halign="center");
 }
 
 if (workon == "5mm_screwdriver") {
-    screwdriver( thickness = 9, diameter = 5);
+    screwdriver( thickness = 9, diameter = 5, ttt="5mm");
 }
 
 if (workon == "6mm_screwdriver") {
-    screwdriver( thickness = 10, diameter = 6);
+    screwdriver( thickness = 10, diameter = 6, ttt="6mm");
 }
 
 if (workon == "7mm_screwdriver") {
-    screwdriver( thickness = 11, diameter = 7);
+    screwdriver( thickness = 11, diameter = 7, ttt="7mm");
 }
 
 if (workon == "8mm_screwdriver") {
-    screwdriver( thickness = 12, diameter = 8 );
+    screwdriver( thickness = 12, diameter = 8 , ttt="8mm");
 }
 
 if (workon == "9mm_screwdriver") {
-    screwdriver( thickness = 13, diameter = 9 );
+    screwdriver( thickness = 13, diameter = 9, ttt="9mm" );
 }
 
 if (workon == "10mm_screwdriver") {
-    screwdriver( thickness = 14, diameter = 10 );
+    screwdriver( thickness = 14, diameter = 10, ttt="10mm" );
 }
 
 if (workon == "11mm_screwdriver") {
-    screwdriver( thickness = 15, diameter = 11 );
+    screwdriver( thickness = 15, diameter = 11, ttt="11mm" );
 }
 
 if (workon == "12mm_screwdriver") {
-    screwdriver( thickness = 16, diameter = 12 );
+    screwdriver( thickness = 16, diameter = 12, ttt="12mm" );
 }
 
 if (workon == "small_pliers") {
@@ -93,7 +94,7 @@ module wrench(post_d, post_h, ttt, thickness = 5, angle=0, tsize=8) {
                 translate([0, 0, thickness + post_h * 1.5]) cylinder(d2=post_d -slop_width*2, d1=post_d, h=post_h/2);
             }
             // make a filet around the base of the post
-            translate([xsize / 2 - 2 + post_d/3, ysize / 2, 0]) scale([1 / cos(angle), 1, 1]) union() {
+            translate([xsize / 2 - angle/7.5 + post_d/3, ysize / 2, 0]) scale([1 / cos(angle), 1, 1]) union() {
                 translate([0, 0,, thickness]) cylinder(d1 = post_d, d2=post_d - slop_width, h=slop_height);
                 translate([0, 0,, thickness]) cylinder(d1 = post_d + slop_width, d2=post_d-slop_width/2, h=slop_height/2);
                 translate([0, 0,, thickness + slop_height * 3/4]) cylinder(d1 = post_d - slop_width*3/4, d2=post_d-slop_width, h=slop_height/2);
@@ -124,10 +125,22 @@ if (workon == "wrench_straight_3_4") {
     }
 }
 
+if (workon == "250mm_wrench") {
+    post_d = 14.8; // for a 10" / 250mm Craftsman adjustable wrench with loop on the end.
+    post_h = 7.5;
+    wrench(post_d, post_h, "10");
+}
+
 if (workon == "wrench_15_1_2") {
     post_d = 13.1; // for a combination 1/2" wrench with a 15 degree tilt.
     post_h = 8.2;
     wrench(post_d, post_h, "1/2", angle=15);
+}
+
+if (workon == "wrench_15_9_16") {
+    post_d = 15-.2; // for a combination 9/16" wrench with a 15 degree tilt.
+    post_h = 9;
+    wrench(post_d, post_h, "9/16", angle=15, tsize=5);
 }
 
 if (workon == "wrench_15_11_32") {
@@ -588,3 +601,19 @@ if (workon == "din_rail_adapter") {
     }
 }
 
+if (workon == "hammer") {
+    thickness = 10;
+    ytotal = 120;
+    spacing = ytotal - ysize - ysize;
+    base(thickness);
+    translate([0, spacing + ysize, 0]) base(thickness);
+    translate([0, (ytotal/2 - ysize/2), 0]) base(thickness); // middle
+    translate([0,ytotal,0]) rotate([0,0,270]) {
+        linear_extrude(height=40)
+            intersection() {
+                translate([-110, -100]) import("hammer.svg");
+                square([120, 60]);
+            }
+    }
+    cube([60, ytotal, 10]);
+}
