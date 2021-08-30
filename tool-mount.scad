@@ -1,6 +1,6 @@
 //bin/sh -c 'grep if.\(workon tool-mount.scad | cut -d\" -f2 | xargs -I X openscad -D workon=\"X\" -o X.stl tool-mount.scad'; exit
 
-workon = "12mm_screwdriver";
+workon = "pallet_knife";
 xsize = 57;
 ysize = 18;
 radius = 5;
@@ -603,17 +603,49 @@ if (workon == "din_rail_adapter") {
 
 if (workon == "hammer") {
     thickness = 10;
-    ytotal = 120;
+    thickness2 = 2;
+    height = xsize;
+    head_d = 20;
+    head_h = 25;
+    shoulder_r = 6;
+    handle_y = 36; // thickness of the handle
+    ytotal = handle_y + shoulder_r *2 + shoulder_r *2 ;
     spacing = ytotal - ysize - ysize;
     base(thickness);
     translate([0, spacing + ysize, 0]) base(thickness);
     translate([0, (ytotal/2 - ysize/2), 0]) base(thickness); // middle
-    translate([0,ytotal,0]) rotate([0,0,270]) {
-        linear_extrude(height=40)
-            intersection() {
-                translate([-110, -100]) import("hammer.svg");
-                square([120, 60]);
-            }
+ 
+    translate([0,0,thickness2]) cube([height, ytotal, thickness - thickness2]);
+
+    difference() {
+        translate([height - head_d/2,ytotal - shoulder_r,thickness]) cylinder(r=shoulder_r, h=head_h);
+        translate([height,ytotal - shoulder_r*2,thickness + head_h/2]) rotate([270,0,0]) cylinder(d=head_d, shoulder_r*2);
     }
-    cube([60, ytotal, 10]);
+    translate([height - head_d,shoulder_r,thickness]) cylinder(r=shoulder_r, h=head_h);
+    translate([height - head_d,shoulder_r,thickness + head_h]) cylinder(r1=shoulder_r, r2=shoulder_r*1.5, h=10);
+}
+
+include <unionRoundSimple.scad>
+
+module upright_box(height, ywidth) {
+    thickness = 2;
+    yzwall = 2;
+    ytotal = yzwall*2 + ywidth;
+    filet_radius = 2;
+    unionRound(filet_radius, 3) {
+        base(thickness);
+        union() {
+            // right
+            translate([1, ysize/2 - ytotal/2 + yzwall/2, thickness]) roundedcube([xsize-2, yzwall, height + yzwall], apply_to="zmax");
+            // left
+            translate([1, ysize/2 + ytotal/2 - yzwall/2, thickness]) roundedcube([xsize-2, yzwall, height + yzwall], apply_to="zmax");
+            // top
+            #translate([1, ysize/2 - ytotal/2 + yzwall/2, thickness + height]) roundedcube([xsize-2, ytotal, yzwall]);
+        }
+    }
+}
+
+if (workon == "pallet_knife") {
+    *upright_box(2, 2);
+    upright_box(16.11 + .5, 2);
 }
