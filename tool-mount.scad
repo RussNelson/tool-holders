@@ -1,6 +1,6 @@
 //bin/sh -c 'grep if.\(workon tool-mount.scad | cut -d\" -f2 | xargs -I X openscad -D workon=\"X\" -o X.stl tool-mount.scad'; exit
 
-workon = "pallet_knife";
+workon = "13mm_chisel";
 xsize = 57;
 ysize = 18;
 radius = 5;
@@ -18,17 +18,13 @@ module base(thickness) {
 }
 
 // generic screwdriver.
-module screwdriver(thickness, diameter, ttt="") {
+module screwdriver(thickness, diameter, ttt="", tsize=10) {
     difference() {
         base(thickness);
         translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter, h=xsize + 0.02, $fn=20); 
-        translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+.5, h=5 + 0.02, $fn=20); 
-        translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+1, h=4 + 0.02, $fn=20); 
-        translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+1.5, h=3 + 0.02, $fn=20); 
-        translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+2, h=2 + 0.02, $fn=20); 
-        translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d=diameter+2.5, h=1 + 0.02, $fn=20); 
+        translate([-0.01,ysize/2,thickness/2 ]) rotate([0,90,0]) cylinder(d2=diameter, d1=diameter+2.5, h=5 + 0.02, $fn=20); 
     }
-    translate([25,ysize/2 - 10/2,thickness]) linear_extrude(height=1) text(ttt, 10, "Arial", halign="center");
+    if (ttt) translate([25,ysize/2 - 10/2,thickness]) linear_extrude(height=1) text(ttt, tsize, "Arial", halign="center");
 }
 
 if (workon == "5mm_screwdriver") {
@@ -274,7 +270,7 @@ if (workon == "large_needlenose_pliers") {
 // needs two bases.
 // add 2mm to the measured width of the chisel for ywidth
 // you don't need to add any extra to the thickness of the chisel for zsize.
-module chisel(thickness, ywidth, zsize, name) {
+module chisel(thickness, ywidth, zsize, name, tsize=8) {
     sidewall = 5;
     ytotal = ywidth + sidewall*2;
     spacing = ytotal - ysize - ysize;
@@ -303,11 +299,15 @@ module chisel(thickness, ywidth, zsize, name) {
             ], 2);
         }
     }
-    translate([15,ytotal/2,thickness]) rotate([0,0,90]) linear_extrude(height=1) text(name, 8, "Arial", halign="center");
+    if (name) translate([15,ytotal/2,thickness]) rotate([0,0,90]) linear_extrude(height=1) text(name, tsize, "Arial", halign="center");
+}
+
+if (workon == "13mm_chisel") {
+    chisel(10, 13.10, 6, "13mm", tsize=6);
 }
 
 if (workon == "20mm_chisel") {
-    chisel(10, 20, 6, "20mm");
+    chisel(10, 20, 6, "20mm", tsize=7);
 }
  
 if (workon == "27mm_chisel") {
@@ -625,27 +625,76 @@ if (workon == "hammer") {
     translate([height - head_d,shoulder_r,thickness + head_h]) cylinder(r1=shoulder_r, r2=shoulder_r*1.5, h=10);
 }
 
-include <unionRoundSimple.scad>
+module filet(radius, length) {
+    translate([0,0,radius])
+    rotate([0,90,0])
+    difference() {
+        translate([0, -radius, 0]) cube([radius, radius,length]);
+        translate([0, -radius, -0.01]) cylinder(r=radius, h=length + 0.02);
+    }
+}
 
 module upright_box(height, ywidth) {
     thickness = 2;
     yzwall = 2;
     ytotal = yzwall*2 + ywidth;
-    filet_radius = 2;
-    unionRound(filet_radius, 3) {
-        base(thickness);
-        union() {
-            // right
-            translate([1, ysize/2 - ytotal/2 + yzwall/2, thickness]) roundedcube([xsize-2, yzwall, height + yzwall], apply_to="zmax");
-            // left
-            translate([1, ysize/2 + ytotal/2 - yzwall/2, thickness]) roundedcube([xsize-2, yzwall, height + yzwall], apply_to="zmax");
-            // top
-            #translate([1, ysize/2 - ytotal/2 + yzwall/2, thickness + height]) roundedcube([xsize-2, ytotal, yzwall]);
-        }
-    }
+    filet_radius = 1;
+    base(thickness);
+    // right
+    translate([1, ysize/2 - ytotal/2 , thickness]) roundedcube([xsize-2, yzwall, height + yzwall], radius=filet_radius, apply_to="zmax");
+    // left
+    translate([1, ysize/2 + ytotal/2 - yzwall, thickness]) roundedcube([xsize-2, yzwall, height + yzwall], radius=filet_radius, apply_to="zmax");
+    // top
+    translate([1, ysize/2 - ytotal/2, thickness + height]) roundedcube([xsize-2, ytotal, yzwall]);
+
+    // right filet
+    translate([1 + filet_radius,  ysize/2 - ytotal/2, thickness]) filet(2, xsize-2 - filet_radius*2);
+    // left filet
+    translate([1 + filet_radius,  ysize/2 + ytotal/2, thickness]) mirror([0,1,0]) filet(2, xsize-2 - filet_radius*2);
 }
 
 if (workon == "pallet_knife") {
-    *upright_box(2, 2);
     upright_box(16.11 + .5, 2);
+}
+
+if (workon == "vernier_caliper") {
+    upright_box(16.6, 8);
+}
+
+if (workon == "stanley_utility_knife") {
+    thickness = 5;
+    ytip = 31.36;
+    ztip = 12.66;
+    xtip = 18.77;
+    yback = 42.24;
+    zback = 24.23;
+    xback = 52.35;
+    // the front is the tip, the back is xback.
+    // the knife is lying on its right side.
+    base(thickness);
+    translate([0, yback+4-ysize, 0]) base(thickness);
+    translate([0,0,thickness]) difference() {
+        cube([xback+4, yback+4, zback+4]);
+        translate([4 + 0.01, 2, ztip/2 + 8]) polyhedron([
+            [xtip, 0, -ztip/2], [0, ytip, -ztip/2], // 0=lower right front, 1=lower left front
+            [xtip, 0, ztip/2], [0, ytip, ztip/2], // 2=upper right front, 3=upper left front
+            [xback, yback, zback/2], [xback, 0, zback/2], // 4=upper left back 5=upper right back
+            [xback, yback, -zback/2], [xback, 0, -zback/2], // 6=lower left back, 7=lower right back
+        ],[
+            [0,7,6,1], // bottom
+            [0,2,5,7], // right
+            [1,6,4,3], // left
+            [0,1,3,2], // front
+            [4,6,7,5], // back
+            [2,3,4,5], // top
+        ], 2);
+    }
+}
+
+if (workon == "allen_wrenches_1-5_2_2-5_3") {
+    screwdriver( thickness = 5, diameter = 3.9);
+    translate([0,0,5]) screwdriver( thickness = 5, diameter = 3.3);
+    translate([0,0,10]) screwdriver( thickness = 4, diameter = 2.8);
+    translate([0,0,14]) screwdriver( thickness = 3, diameter = 2.3);
+    translate([0,0,17]) screwdriver( thickness = 3, diameter = 1.8, ttt="1.25/1.5/2/2.5/3", tsize=5);
 }
