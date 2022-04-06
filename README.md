@@ -1,6 +1,6 @@
 I'm trying to get my work area more organized. Stop leaving tools on my
 workbench. To that end, I've been 3D printing tool holders that get mounted on
-DIN "top hat" rail. DIN rail (https://en.wikipedia.org/wiki/DIN\_rail) has been
+DIN "top hat" rail. DIN rail (https://en.wikipedia.org/wiki/DIN_rail) has been
 around for 80 years, and is mostly used to mount circuit breakers and other
 electronics. It's nice because it's relatively inexpensive, easy to mount, and
 comes in some very long lengths.
